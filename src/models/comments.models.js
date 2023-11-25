@@ -1,4 +1,4 @@
-import { Schema, Types, model } from "mongoose";
+import mongoose, { Schema, Types } from "mongoose";
 
 const commentSchema = new Schema(
   {
@@ -22,4 +22,4 @@ const commentSchema = new Schema(
   { timestamps: true }
 );
 
-export const Comment = model("Comment", commentSchema);
+export const Comment = mongoose.model("Comment", commentSchema);
