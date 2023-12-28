@@ -157,7 +157,7 @@ export const loginUser = asyncHandler(async (req, res) => {
     throw new ApiError(404, "User not found");
   }
 
-  const isValidPassword = user.isCorrectPassword(password);
+  const isValidPassword = await user.isCorrectPassword(password);
   if (!isValidPassword) {
     throw new ApiError(401, "Invalid user credential");
   }
@@ -253,4 +253,65 @@ export const getAccessToken = asyncHandler(async (req, res) => {
     console.log("error while parsing token");
     throw new ApiError(401, error?.message || "Invalid refresh token");
   }
+});
+
+export const updatePassword = asyncHandler(async (req, res) => {
+  const { currentPassword: password, newPassword } = req.body;
+  const userId = req?.user?._id;
+
+  // validation of password
+
+  console.table([password, newPassword]);
+
+  const updateSchema = Joi.object({
+    newPassword: Joi.string()
+      .min(8)
+      .regex(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/
+      )
+      .required()
+      .messages({
+        "string.min": "New Password should have a minimum length of {#limit}",
+        "string.pattern.base":
+          "New Password must include at least one lowercase letter, one uppercase letter, one digit, and one special character",
+        "any.required": "New password is required",
+      }),
+    password: Joi.string()
+      .required()
+      .messages({ "any.required": "current password is required" }),
+  });
+
+  await updateSchema.validateAsync({
+    newPassword,
+    password,
+  });
+
+  // check user exits
+  const user = await User.findById(userId);
+  // Checking current password
+  if (!(await user.isCorrectPassword(password))) {
+    throw new ApiError(401, "Current Password is incorrect");
+  }
+
+  // If everything is correct then save the new password
+  const updatePassword = await User.findByIdAndUpdate(
+    user._id,
+    {
+      $set: {
+        password: newPassword,
+      },
+    },
+    { new: true }
+  );
+
+  if (!updatePassword) {
+    throw new ApiError(
+      500,
+      "Something went wrong when updating your password."
+    );
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "Password updated successfully"));
 });

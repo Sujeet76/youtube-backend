@@ -49,10 +49,27 @@ const userSchema = new Schema(
 );
 
 userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) {
-    return next();
+  try {
+    if (!this.isModified("password")) {
+      console.log("Not modified");
+      return next();
+    }
+    this.password = await bcrypt.hash(this.password, 10);
+    next();
+  } catch (error) {
+    console.log("error while encrypting password");
+    return next(error);
   }
-  this.password = await bcrypt.hash(this.password, 10);
+});
+
+// encounter the error when i updated password using update command that why added this pre middleware
+userSchema.pre("findOneAndUpdate", async function (next) {
+  if (this._update.$set && this._update.$set.password) {
+    this._update.$set.password = await bcrypt.hash(
+      this._update.$set.password,
+      10
+    );
+  }
   next();
 });
 
@@ -84,4 +101,4 @@ userSchema.methods.getRefreshToken = function () {
   );
 };
 
-export const User = mongoose.model("User", userSchema)
+export const User = mongoose.model("User", userSchema);

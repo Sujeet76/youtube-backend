@@ -4,6 +4,7 @@ import {
   loginUser,
   logoutUser,
   registerUser,
+  updatePassword,
 } from "../controllers/user.controllers.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { isAuthenticated } from "../middlewares/auth.middleware.js";
@@ -24,5 +25,6 @@ router.route("/get-access-token").get(getAccessToken);
 
 //protected route
 router.route("/logout").post(isAuthenticated, logoutUser);
+router.route("/update-password").patch(isAuthenticated, updatePassword);
 
 export default router;
