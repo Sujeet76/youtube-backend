@@ -16,21 +16,14 @@ export const uploadToCloudinary = async (
 ) => {
   try {
     if (!localPath) return null;
-
+    console.log(localPath);
     const option = { folder };
     if (height) option.height = height;
     if (quality) option.quality = quality;
     option.resourceType = "auto";
 
     // upload file to cloudinary => file larger then 100mb
-    const response = await new Promise.resolve((resolve, reject) => {
-      v2.uploader.upload_large(localPath, option, (error, response) => {
-        if (error) {
-          reject(error);
-        }
-        resolve(response);
-      });
-    });
+    const response = await v2.uploader.upload(localPath, option);
 
     // remove file from public folder
     fs.unlinkSync(localPath);

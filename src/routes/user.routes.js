@@ -1,6 +1,12 @@
 import { Router } from "express";
-import { registerUser } from "../controllers/user.controllers.js";
+import {
+  getAccessToken,
+  loginUser,
+  logoutUser,
+  registerUser,
+} from "../controllers/user.controllers.js";
 import { upload } from "../middlewares/multer.middleware.js";
+import { isAuthenticated } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
@@ -12,5 +18,11 @@ router.route("/register").post(
   ]),
   registerUser
 );
+// login
+router.route("/login").post(loginUser);
+router.route("/get-access-token").get(getAccessToken);
+
+//protected route
+router.route("/logout").post(isAuthenticated, logoutUser);
 
 export default router;
