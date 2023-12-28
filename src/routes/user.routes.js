@@ -5,6 +5,7 @@ import {
   logoutUser,
   registerUser,
   updatePassword,
+  updateProfilePicture,
 } from "../controllers/user.controllers.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { isAuthenticated } from "../middlewares/auth.middleware.js";
@@ -26,5 +27,8 @@ router.route("/get-access-token").get(getAccessToken);
 //protected route
 router.route("/logout").post(isAuthenticated, logoutUser);
 router.route("/update-password").patch(isAuthenticated, updatePassword);
+router
+  .route("/update-avatar")
+  .patch(isAuthenticated, upload.single("avatar"), updateProfilePicture);
 
 export default router;

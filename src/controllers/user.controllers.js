@@ -3,7 +3,10 @@ import jwt from "jsonwebtoken";
 import { User } from "../models/users.models.js";
 import { asyncHandler } from "../utils/AsyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
-import { uploadToCloudinary } from "../utils/cloudinary.js";
+import {
+  deleteFromCloudinary,
+  uploadToCloudinary,
+} from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 
 const options = {
@@ -314,4 +317,51 @@ export const updatePassword = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .json(new ApiResponse(200, "Password updated successfully"));
+});
+
+export const updateProfilePicture = asyncHandler(async (req, res) => {
+  /**
+   * steps
+   * 1.check user is authorized
+   * 2.validate data from req
+   * 3.upload to cloudinary
+   * 4.delete previous image(optional)
+   * 5.send back the response
+   */
+
+  const avatar = req.file?.path;
+  const { _id } = req?.user;
+  if (!avatar) {
+    throw new ApiError(401, "Avatar image is required");
+  }
+
+  try {
+    const user = await User.findById(_id);
+    if (!user) {
+      throw new ApiError(404, "User not found");
+    }
+    let oldImage = user?.avatar;
+    const avatarImage = await uploadToCloudinary(avatar);
+
+    const updateUser = await User.findByIdAndUpdate(
+      _id,
+      {
+        $set: {
+          avatar: avatarImage.secure_url,
+        },
+      },
+      { new: true }
+    ).select("-password -refreshToken");
+
+    // delete old image from cloudinary
+    let publicId = oldImage.split(".")[2].split("/").slice(5).join("/");
+    deleteFromCloudinary(publicId);
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, "Profile Image update", updateUser));
+  } catch (error) {
+    console.log(`Error while changing img => error : ${error}`);
+    throw new ApiError(500, "Could not update profile image");
+  }
 });

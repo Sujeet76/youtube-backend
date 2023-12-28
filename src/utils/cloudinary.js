@@ -34,3 +34,27 @@ export const uploadToCloudinary = async (
     return null;
   }
 };
+
+export const deleteFromCloudinary = async (localPath) => {
+  try {
+    if (!localPath) return null;
+    console.log(localPath);
+    v2.api
+      .delete_resources([localPath], {
+        type: "upload",
+        resource_type: "image",
+        invalidate : true
+      })
+      .then((data) => {
+        console.log("Deleted!!");
+        return data;
+      })
+      .catch((err) => {
+        console.log("Err => ", err);
+      });
+  } catch (error) {
+    console.log(`Error while deleting image error : ${error}`);
+    return null;
+  }
+};
+// http://res.cloudinary.com/dcplnllih/image/upload/v1703739261/youtube/images/safsf2tz9ll5xo4n35wd.png
